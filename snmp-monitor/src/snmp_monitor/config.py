@@ -4,7 +4,7 @@ from snmp_monitor.models import AgentConfig
 
 def leggi_config(path: str) -> list[AgentConfig]:
     """
-    Legge lil contenuto yaml del file di configurazione e restituisce una lista di oggetti AgentConfig.
+    Legge il contenuto yaml del file di configurazione e restituisce una lista di oggetti AgentConfig.
     """
 
     with open(path, "r") as f:

@@ -36,7 +36,7 @@ class TrapEvent:
 
 @dataclass
 class AgentConfig:
-    name: str
-    host: str
-    port: int
-    community: str
+    name: str # Identifica l'agente, ad esempio "Router1"
+    host: str # Indirizzo IP
+    port: int  # Porta SNMP (default 161)
+    community: str # Autorizza la lettura dei dati
