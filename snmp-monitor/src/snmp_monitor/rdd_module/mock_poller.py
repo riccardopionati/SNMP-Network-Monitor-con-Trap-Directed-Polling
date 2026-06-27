@@ -1,5 +1,5 @@
 import random
-import config
+from snmp_monitor.rdd_module import config
 import csv
 import os
 import time
@@ -70,7 +70,7 @@ def wrap_counter(value: int) -> int:
 
 def write_metrics(filepath: str , rows: list[dict]) -> None :
     file_exist= os.path.exists(filepath)
-    with open(filepath , "a" ,newline=" ") as f:
+    with open(filepath , "a" ,newline="") as f:
         fieldnames = [
             "timestamp", "agent_ip", "if_index", "if_descr",
             "if_in_octets", "if_out_octets",
@@ -80,3 +80,39 @@ def write_metrics(filepath: str , rows: list[dict]) -> None :
         if not file_exist:
             writer.writeheader()
         writer.writerows(rows)
+
+def main_loop() -> None :
+    #Agente fasullo utilizzato per produrre dati da fornire al poller fino al completamento dei veri agent
+
+    rows = []
+    timestamp = int(time.time())
+
+    for agent_ip, agent_data in AGENTS.items() :
+        for iface in agent_data["interfaces"] :
+            
+            iface["if_in_octets"] = wrap_counter(iface["if_in_octets"] + generatore_incremento_traffico(iface["base_in_mbps"]))
+            iface["if_out_octets"] = wrap_counter(iface["if_out_octets"] + generatore_incremento_traffico(iface["base_out_mbps"])) 
+            iface["if_in_errors"] += generate_error_increment()
+            iface["if_out_errors"] += generate_error_increment()
+            iface["if_oper_status"] = simulate_oper_status(iface["if_oper_status"])
+
+            rows.append({
+                    "timestamp" : timestamp,
+                    "agent_ip" : agent_ip,
+                    "if_index":       iface["if_index"],
+                    "if_descr":       iface["if_descr"],
+                    "if_in_octets":   iface["if_in_octets"],
+                    "if_out_octets":  iface["if_out_octets"],
+                    "if_in_errors":   iface["if_in_errors"],
+                    "if_out_errors":  iface["if_out_errors"],
+                    "if_oper_status": iface["if_oper_status"],
+
+            })
+
+    write_metrics(config.CSV_PATH,rows)
+
+if __name__ == "__main__" :
+    print("fasullo in corso")
+    while True :
+        main_loop()
+        time.sleep(config.POLLING_INTERVAL)
