@@ -12,7 +12,7 @@ COUNTER32_MAX = 4_294_967_295
 
 # Logger per il modulo
 logger = logging.getLogger(__name__)
-
+_previous: dict[str, dict[int, InterfaceMetric]] = {}
 
 
 def _to_int(value, default: int = 0) -> int:
@@ -48,7 +48,8 @@ async def poll_interface(agent: AgentConfig) -> list[InterfaceMetric]:
         *[
             snmp_bulk_walk(agent.host, agent.port, agent.community, oid.value)
             for oid in INTERFACE_METRIC_COLUMNS.values()
-        ]
+        ],
+        return_exceptions=True,
     )
 
     # Unisce i risultati delle metriche ottenute alle interfacce
@@ -113,7 +114,7 @@ async def poll_all_agents(agents: list[AgentConfig]) -> list[InterfaceMetric]:
     Lo stato precedente (_previous) viene aggiornato dopo ogni ciclo.
 
     Flusso per ogni agente:
-      1. poll_agent(): legge i contatori
+      1. poll_interface(): legge i contatori
       2. poller_mbps() calcola Mbps rispetto alla lettura precedente
       3. aggiorna _previous per il ciclo successivo
     """
@@ -135,7 +136,7 @@ async def poll_all_agents(agents: list[AgentConfig]) -> list[InterfaceMetric]:
             continue
 
         # Raccolgo le metriche precedenti per calolare il traffico
-        agent_previous = previous.get(agent.name, {})
+        agent_previous = _previous.get(agent.name, {})
         # Qui dentro ci vanno le liste con i Mbps aggiornati
         metriche_con_delta: list[InterfaceMetric] = []
 
@@ -147,7 +148,7 @@ async def poll_all_agents(agents: list[AgentConfig]) -> list[InterfaceMetric]:
             metriche_con_delta.append(current)
 
         # Aggiorna lo storico per il prossimo ciclo
-        previous[agent.name] = {m.if_index: m for m in result}
+        _previous[agent.name] = {m.if_index: m for m in result}
     
         all_metrics.extend(metriche_con_delta)
 

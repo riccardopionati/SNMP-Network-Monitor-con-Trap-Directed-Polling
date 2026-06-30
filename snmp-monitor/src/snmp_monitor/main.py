@@ -121,8 +121,6 @@ async def _main_async(args: argparse.Namespace) -> None:
     )
 
 def main() -> None:
-    
-    
     parser = argparse.ArgumentParser(description="SNMP Poller")
     parser.add_argument(
         # Specifica gli Agents
