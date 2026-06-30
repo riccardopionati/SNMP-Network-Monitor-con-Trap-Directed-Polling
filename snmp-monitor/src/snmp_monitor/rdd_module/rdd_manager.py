@@ -3,6 +3,18 @@ import csv
 import time
 import rrdtool
 
+
+def parse_rrd_filename(filename: str) -> tuple[str, str]:
+    """Restituisce IP e indice di interfaccia a partire da un nome di file RRD.
+
+    Formato atteso: 192_168_1_1_if1.rrd -> ("192.168.1.1", "1")
+    """
+    stem = os.path.basename(filename)[:-4]
+    ip_part, iface_part = stem.rsplit("_if", 1)
+    ip_address = ip_part.replace("_", ".")
+    return ip_address, iface_part
+
+
 def create_rrd_path(agent_ip:str,if_index:str)-> str :
 
     #crea il filename per l'agent 

@@ -1,5 +1,6 @@
 import os
 import rrdtool
+from snmp_monitor.rdd_module.rdd_manager import parse_rrd_filename
 
 def graph_traffic(path:str) :
 
@@ -13,13 +14,15 @@ def graph_traffic(path:str) :
     print(f"File esiste: {os.path.exists(rrd_path_abs)}")
     print(f"DEF: DEF:traffic_in:{rrd_path_abs}:if_octets_in:AVERAGE")
 
+    ip,inf = parse_rrd_filename(path)
+
     # Genero il grafico con un intervallo di 1 ora e una linea più leggibile
     # così i punti non spariscono se i campioni arrivano con un po' di ritardo
     rrdtool.graph(
         png_path,
         "--start", "-1h", #inizio tempo dati raccolti
         "--end", "now", #fine tempo dati raccolti
-        "--title", "Traffico eth0", #titolo grafo
+        "--title", f"Traffico intefaccia{inf} di {ip}", #titolo grafo
         "--vertical-label", "bytes/s", #testo asse verticale
         "--width", "800", #larghezza
         "--height", "300", #altezza
