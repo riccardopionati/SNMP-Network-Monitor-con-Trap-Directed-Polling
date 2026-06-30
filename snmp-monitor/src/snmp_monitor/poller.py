@@ -7,7 +7,7 @@ from snmp_monitor.models import AgentConfig, InterfaceMetric
 from snmp_monitor.oid import IF_OPER_STATUS, INTERFACE_METRIC_COLUMNS
 from snmp_monitor.snmp_client import snmp_bulk_walk
 
-# COUNTER32 è un tipo di dato definito in SNMP senza segno e SOLO positivo e rappresenta il numero di byte che attraversa un'interfaccia
+# COUNTER32 è un tipo di dato definito in SNMP senza segno e SOLO positivo. Rappresenta il numero di byte che attraversa un'interfaccia
 COUNTER32_MAX = 4_294_967_295
 
 # Logger per il modulo
@@ -51,6 +51,7 @@ async def poll_interface(agent: AgentConfig) -> list[InterfaceMetric]:
         ]
     )
 
+    # Unisce i risultati delle metriche ottenute alle interfacce
     columns: dict[str, dict[int, str]] = dict(
         zip(INTERFACE_METRIC_COLUMNS.keys(), risultati)
     )
@@ -112,18 +113,17 @@ async def poll_all_agents(agents: list[AgentConfig]) -> list[InterfaceMetric]:
     Lo stato precedente (_previous) viene aggiornato dopo ogni ciclo.
 
     Flusso per ogni agente:
-      1. poll_agent(): legge i contatori raw
+      1. poll_agent(): legge i contatori
       2. poller_mbps() calcola Mbps rispetto alla lettura precedente
       3. aggiorna _previous per il ciclo successivo
     """
     
-    results_per_agent = await asyncio.gather( # Qui chiama parallelamente poll_agent su tutti gli agenti
+    # Chiama parallelamente poll_agent su tutti gli agenti
+    results_per_agent = await asyncio.gather(
         *[poll_interface(agent) for agent in agents],
         return_exceptions = True,
     )
     
-    # L'operatore unpacking operator ("*") permette di spacchettare un numero variabile di argomenti passati alla funzione
-    # return_exceptions = True se una lettura dovesse dare errore inserisce comunque quell'elemento nella lista senza dare eccezzione
     
     all_metrics: list[InterfaceMetric] = []
 
