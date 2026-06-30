@@ -1,4 +1,3 @@
-import asyncio
 from pysnmp.hlapi.asyncio import (
     bulk_walk_cmd,
     SnmpEngine,
